@@ -5,46 +5,63 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Folder;
 use App\Models\Request;
+use Illuminate\Support\Facades\Cache;
 
 class Counter extends Component
 {
-    public $folders;
+    public $folders = [];
+    public $person = '';
 
-    public $activeSection = 'default';
-    public $isClicked= false;
-
+    public $activeSection = null;
+    public $selectedContent = null;
+    public $isClicked = false;
 
     public $name;
     public $email;
     public $message;
-    public $showForm;
-
-
-
-
-
-
+    public $showForm = false;
 
     public function mount()
     {
-        $this->folders = Folder::all();
+        $this->folders = Cache::remember('folders:list', now()->addHour(), function () {
+            return Folder::query()
+                ->select('id', 'title')
+                ->get();
+        });
+
+        $this->person = Cache::remember('person', now()->addHour(), function () {
+            return Person::query()
+                ->first();
+        });
     }
 
-    public function setSection($section)
+    public function setSection($folderId)
     {
-        $this->activeSection = $section;
-        $this->isClicked= true;
+        $folder = Cache::remember("folders:{$folderId}", now()->addHour(), function () use ($folderId) {
+            return Folder::query()
+                ->select('id', 'content')
+                ->find($folderId);
+        });
 
+        if (! $folder) {
+            $this->removeSection();
+
+            return;
+        }
+
+        $this->activeSection = $folder->id;
+        $this->selectedContent = $folder->content;
+        $this->isClicked = true;
     }
 
     public function removeSection()
     {
-        $this->activeSection = 'default';
-        $this->isClicked= false;
+        $this->activeSection = null;
+        $this->selectedContent = null;
+        $this->isClicked = false;
     }
 
-
-    public function showForm()
+    public function openForm()
     {
         $this->showForm = true;
     }
@@ -63,21 +80,16 @@ class Counter extends Component
             'message' => 'required|min:10',
         ]);
 
-        // Handle form submission (e.g., save to database or send email)
-
         Request::create([
             'name' => $this->name,
             'email' => $this->email,
             'message' => $this->message,
         ]);
     
-        // Clear form fields
         $this->reset(['name', 'email', 'message']);
 
-        // Hide the form
         $this->hideForm();
 
-        // Optionally, show a success message
         session()->flash('message', 'Your message has been sent!');
     }
 

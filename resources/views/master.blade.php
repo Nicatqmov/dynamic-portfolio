@@ -15,8 +15,8 @@
     <div class="phone">
         <div class="screen" id="main">
             @include('top')
-            @include('name')
-            @livewire('counter') <!-- This correctly renders the Livewire component -->
+            @livewire('name')
+            @livewire('counter')
             @include('bottom')
         </div>
     </div>

@@ -16,19 +16,14 @@
             const now = new Date();
             let hours = now.getHours();
             let minutes = now.getMinutes();
-            
-            // Format time to always be two digits
+
             hours = hours < 10 ? '0' + hours : hours;
             minutes = minutes < 10 ? '0' + minutes : minutes;
     
             timeElement.textContent = `${hours}:${minutes}`;
         }
-    
-        // Update time every second
         setInterval(updateTime, 1000);
     
-        // Initialize time when page loads
         updateTime();
     </script>
 @endsection
-
